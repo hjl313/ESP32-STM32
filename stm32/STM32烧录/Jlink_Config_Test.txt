@@ -1,0 +1,10 @@
+usb 0
+si 1
+speed 4000
+device STM32F103C8
+r
+h
+erase
+loadbin LCD.bin 0x08000000
+Reset
+Exit
