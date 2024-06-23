@@ -1,0 +1,15 @@
+# esp32
+build/
+.vscode/
+sdkconfig
+
+
+
+
+# stm32
+Objects/
+OBJ/
+
+
+
+
