@@ -21,7 +21,7 @@ extern "C" {
     #include "esp_mn_iface.h"
     #include "esp_mn_models.h"
     #include "driver/i2s.h"
-    #include "model_path.h"
+    // #include "model_path.h"
 
     #include "app_wifi.h"
 }
@@ -49,7 +49,7 @@ static AudioProcessor *m_audio_processor = NULL;
 static TaskHandle_t m_nnTaskHandle = NULL;
 
 static model_iface_data_t *m_model_data_mn = NULL;
-static const esp_mn_iface_t *m_multinet = &MULTINET_MODEL;
+// static const esp_mn_iface_t *m_multinet = &MULTINET_MODEL;
 
 static void i2s_init(void){
     i2s_config_t i2s_config = {
@@ -94,6 +94,7 @@ static void recsrcTask(void *arg)
         }
         
         m_rbuffer->push(samp, samp_len*sizeof(int16_t), true);
+        // printf("--%d--\n",samp_len*sizeof(int16_t) );
         xTaskNotify(m_nnTaskHandle, 1, eSetBits);
     }
 
@@ -107,8 +108,8 @@ void nnTask(void *arg)
     uint16_t mn_chunks = 0;
     int16_t *buffer = (int16_t *)malloc(AUDIO_LENGTH*sizeof(int16_t));
 
-    int chunk_num = m_multinet->get_samp_chunknum(m_model_data_mn);
-    ESP_LOGI(TAG, "chunk_num = %d\n", chunk_num);
+    // int chunk_num = m_multinet->get_samp_chunknum(m_model_data_mn);
+    // ESP_LOGI(TAG, "chunk_num = %d\n", chunk_num);
 
     baiduChunkedUploader *speech_recogniser = NULL;
 
@@ -120,55 +121,58 @@ void nnTask(void *arg)
             float *input_buffer = m_nn->getInputBuffer();
             m_audio_processor->get_spectrogram(buffer, input_buffer);
             float output = m_nn->predict();
+             printf("P  %.2f\n", output);
             if (output > 0.95)
             {
                 printf("P(%.2f): Here I am, brain the size of a planet...\n", output);
-                m_speech_status = SPEECH_STAUS_RECOGNITIONING;
+                // m_speech_status = SPEECH_STAUS_RECOGNITIONING;
                 m_rbuffer->reset();
                 vTaskDelay(10 / portTICK_PERIOD_MS);
+                 continue;
             }
         }else if(m_speech_status == SPEECH_STAUS_RECOGNITIONING){
-            uint32_t size = m_rbuffer->used_size();
-            if(size < 512*sizeof(int16_t)){
-                uint32_t ulNotificationValue = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+            // printf("...\n");
+            // uint32_t size = m_rbuffer->used_size();
+            // if(size < 512*sizeof(int16_t)){
+            //     uint32_t ulNotificationValue = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                 continue;
-            }
-            m_rbuffer->pop(buffer, 512*sizeof(int16_t));
-            mn_chunks++;
-            int command_id = m_multinet->detect(m_model_data_mn, buffer);
-            if (mn_chunks == 32*2 || command_id > -1) {
-                mn_chunks = 0;
-                m_speech_status = SPEECH_STAUS_WAIT_WAKE;
-                if (command_id > -1) {
-                    ESP_LOGI(TAG, "speech command id： %d", command_id);
-                } else {
-                    ESP_LOGI(TAG, "can not recognize any speech commands");
-                    ESP_LOGI(TAG, "start using Baidu speech recognition");
-                    if(app_wifi_get_connect_status()){
-                        m_rbuffer->suspend();
-                        speech_recogniser = new baiduChunkedUploader();
-                        // vTaskDelay(10 / portTICK_PERIOD_MS);
-                        if (speech_recogniser && speech_recogniser->connected()){
-                            for (size_t index = 0; index < 16000*2; )
-                            {
-                                m_rbuffer->get_buffer(index*sizeof(int16_t), buffer, 500*sizeof(int16_t));  
-                                speech_recogniser->startChunk(500*sizeof(int16_t));
-                                speech_recogniser->sendChunkData((const uint8_t *)buffer, 500*sizeof(int16_t));
-                                speech_recogniser->finishChunk();
-                                index += 500;
-                            }
-                            char http_results[512] = {0};
-                            int resp_code = speech_recogniser->getResults(http_results, 512);
-                            ESP_LOGI(TAG, "resp_code: %d   %s", resp_code, http_results);
-                        }
-                        delete speech_recogniser;
-                        speech_recogniser = NULL;
-                        m_rbuffer->resume();
-                    }else{
-                        ESP_LOGE(TAG, "wifi is not connect can not using Baidu speech recognition");
-                    }
-                }
-            }
+            // }
+            // m_rbuffer->pop(buffer, 512*sizeof(int16_t));
+            // mn_chunks++;
+            // int command_id = m_multinet->detect(m_model_data_mn, buffer);
+            // if (mn_chunks == 32*2 || command_id > -1) {
+            //     mn_chunks = 0;
+            //     m_speech_status = SPEECH_STAUS_WAIT_WAKE;
+            //     if (command_id > -1) {
+            //         ESP_LOGI(TAG, "speech command id： %d", command_id);
+            //     } else {
+            //         ESP_LOGI(TAG, "can not recognize any speech commands");
+            //         ESP_LOGI(TAG, "start using Baidu speech recognition");
+            //         if(app_wifi_get_connect_status()){
+            //             m_rbuffer->suspend();
+            //             speech_recogniser = new baiduChunkedUploader();
+            //             // vTaskDelay(10 / portTICK_PERIOD_MS);
+            //             if (speech_recogniser && speech_recogniser->connected()){
+            //                 for (size_t index = 0; index < 16000*2; )
+            //                 {
+            //                     m_rbuffer->get_buffer(index*sizeof(int16_t), buffer, 500*sizeof(int16_t));  
+            //                     speech_recogniser->startChunk(500*sizeof(int16_t));
+            //                     speech_recogniser->sendChunkData((const uint8_t *)buffer, 500*sizeof(int16_t));
+            //                     speech_recogniser->finishChunk();
+            //                     index += 500;
+            //                 }
+            //                 char http_results[512] = {0};
+            //                 int resp_code = speech_recogniser->getResults(http_results, 512);
+            //                 ESP_LOGI(TAG, "resp_code: %d   %s", resp_code, http_results);
+            //             }
+            //             delete speech_recogniser;
+            //             speech_recogniser = NULL;
+            //             m_rbuffer->resume();
+            //         }else{
+            //             ESP_LOGE(TAG, "wifi is not connect can not using Baidu speech recognition");
+            //         }
+            //     }
+            // }
         }else if(m_speech_status == SPEECH_STAUS_RERECOGNITION){
             m_rbuffer->reset();
             m_speech_status = SPEECH_STAUS_RECOGNITIONING;
@@ -191,10 +195,11 @@ static void speech_task(void *arg)
 
     m_rbuffer = new Rbuffer((AUDIO_LENGTH*3)*sizeof(int16_t));
 
-#ifdef CONFIG_MODEL_IN_SPIFFS
-    srmodel_spiffs_init();
-#endif
-    m_model_data_mn = m_multinet->create((model_coeff_getter_t *)&MULTINET_COEFF, 4000);
+// #ifdef CONFIG_MODEL_IN_SPIFFS
+//     srmodel_spiffs_init();
+// #endif
+
+    // m_model_data_mn = m_multinet->create((model_coeff_getter_t *)&MULTINET_COEFF, 4000);
 
     xTaskCreatePinnedToCore(&recsrcTask, "rec", 4*1024, NULL, 4, NULL, 1);
 

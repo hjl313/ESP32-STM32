@@ -63,7 +63,7 @@ NeuralNetwork::NeuralNetwork()
 NeuralNetwork::~NeuralNetwork()
 {
     delete m_interpreter;
-    delete m_resolver;
+    // delete m_resolver;
     free(m_tensor_arena);
     delete m_error_reporter;
 }

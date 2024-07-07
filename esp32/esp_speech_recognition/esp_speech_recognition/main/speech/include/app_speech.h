@@ -6,7 +6,7 @@
 #ifndef _APP_SPEECH_H_
 #define _APP_SPEECH_H_
 
-#define SPEECH_I2S_PORT                    1
+#define SPEECH_I2S_PORT                    0
 
 #define SPEECH_I2S_BCK_PIN                 41
 #define SPEECH_I2S_WS_PIN                  42

@@ -24,10 +24,10 @@ extern "C" void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
-    ESP_ERROR_CHECK(esp_netif_init());
+    // ESP_ERROR_CHECK(esp_netif_init());
 
-    app_wifi_init();
-    app_wifi_connect("HoGC", "227227227");
+    // app_wifi_init();
+    // app_wifi_connect("HoGC", "227227227");
 
     app_speech_init();
 }
