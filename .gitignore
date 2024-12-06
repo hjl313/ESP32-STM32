@@ -14,3 +14,4 @@ OBJ/
 
 .DS_Store
 sdkconfig.*
+flash_tool/
